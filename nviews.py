@@ -42,12 +42,14 @@ def generate_lr(img : np.ndarray, depth : np.ndarray):
     plt.title('dextera')
     plt.show()
 
-def main(imageFilename, depthFilename, viewNumber: int):
+def main(imageFilename, depthFilename, viewNumber: int, fact = 1.0/50.0):
     im = cv2.imread(imageFilename)
     im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
     depth = cv2.imread(depthFilename)
     plt.figure(1)
+    plt.title('Preview')
     ref = plt.imshow(im)
+    plt.axis('off')
     plt.ion()
     toshow = []
     depthGray = cv2.cvtColor(depth, cv2.COLOR_BGR2GRAY)
@@ -60,7 +62,7 @@ def main(imageFilename, depthFilename, viewNumber: int):
     for offset in np.arange(-1, 1+delta, delta):
         print(offset)
         #Per Enrique: da modificare l'ultimo parametro della seguente chiamata 1/50
-        toshow.append(generate_intermediate(im, depthGray, offset, 1/50))
+        toshow.append(generate_intermediate(im, depthGray, offset, fact))
         cv2.imwrite("output" + str(cnt) + ".png", cv2.cvtColor(toshow[-1], cv2.COLOR_RGB2BGR))
         cnt += 1
 
@@ -94,18 +96,23 @@ def main(imageFilename, depthFilename, viewNumber: int):
             fw = False
         elif cnt == 0:
             fw = True
-        plt.pause(0.1)
+        status = plt.waitforbuttonpress(0.1)
+        if status:
+            break
 
     plt.ioff()
     plt.show()
 
 def usage():
     print("Usage:")
-    print("   " + sys.argv[0] + " <imagefile> <depthmap> <number of views>")
+    print("   " + sys.argv[0] + " <imagefile> <depthmap> <number of views> [factor]")
 
 if __name__ == "__main__":
     if len(sys.argv)<4:
         usage()
         sys.exit(1)
 
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]))
+    if len(sys.argv)==4:
+        main(sys.argv[1], sys.argv[2], int(sys.argv[3]))
+    else:
+        main(sys.argv[1], sys.argv[2], int(sys.argv[3]), float(eval(sys.argv[4])))
