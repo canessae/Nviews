@@ -2,15 +2,20 @@ import sys
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
 
-def generate_intermediate(img, depth, offset, fact):
+def generate_intermediate(img, depth, offset, fact, updown : bool = False):
     (h, w) = depth.shape
     mapx = np.zeros(depth.shape).astype('float32')
     mapy = np.zeros(depth.shape).astype('float32')
     for ii in range(0, h):
         for jj in range(0, w):
-            mapy[ii, jj] = ii
-            mapx[ii, jj] = jj - depth[ii, jj] * fact * offset
+            if not updown:
+                mapy[ii, jj] = ii
+                mapx[ii, jj] = jj - depth[ii, jj] * fact * offset
+            else:
+                mapy[ii, jj] = ii - depth[ii, jj] * fact * offset
+                mapx[ii, jj] = jj
     result = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
     return result
 
@@ -42,7 +47,7 @@ def generate_lr(img : np.ndarray, depth : np.ndarray):
     plt.title('dextera')
     plt.show()
 
-def main(imageFilename, depthFilename, viewNumber: int, fact = 1.0/50.0):
+def main(imageFilename, depthFilename, viewNumber: int, fact, updown : bool):
     im = cv2.imread(imageFilename)
     im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
     depth = cv2.imread(depthFilename)
@@ -62,7 +67,7 @@ def main(imageFilename, depthFilename, viewNumber: int, fact = 1.0/50.0):
     for offset in np.arange(-1, 1+delta, delta):
         print(offset)
         #Per Enrique: da modificare l'ultimo parametro della seguente chiamata 1/50
-        toshow.append(generate_intermediate(im, depthGray, offset, fact))
+        toshow.append(generate_intermediate(im, depthGray, offset, fact, updown))
         cv2.imwrite("output" + str(cnt) + ".png", cv2.cvtColor(toshow[-1], cv2.COLOR_RGB2BGR))
         cnt += 1
 
@@ -103,16 +108,19 @@ def main(imageFilename, depthFilename, viewNumber: int, fact = 1.0/50.0):
     plt.ioff()
     plt.show()
 
-def usage():
-    print("Usage:")
-    print("   " + sys.argv[0] + " <imagefile> <depthmap> <number of views> [factor]")
+def commandline():
+    parser = argparse.ArgumentParser(
+        prog = "Nviews",
+        description = "Simple python code to create n views from image and depth")
+    parser.add_argument('-i', '--inputimage', required=True, help='Input image')
+    parser.add_argument('-d', '--depthmap', required=True, help='Dephtmap required to reconstruct views')
+    parser.add_argument('-nv', '--nviews', required=True, type=int, help='Number of views to be created')
+    parser.add_argument('-f', '--factor', default="1/50", help="Factor to be used to create n views")
+    parser.add_argument('-ud', '--updown', action='store_true', default=False, help="Up-down mode instead of left-right")
+    args = parser.parse_args()
+    return args
 
 if __name__ == "__main__":
-    if len(sys.argv)<4:
-        usage()
-        sys.exit(1)
+    args = commandline()
 
-    if len(sys.argv)==4:
-        main(sys.argv[1], sys.argv[2], int(sys.argv[3]))
-    else:
-        main(sys.argv[1], sys.argv[2], int(sys.argv[3]), float(eval(sys.argv[4])))
+    main(args.inputimage, args.depthmap, args.nviews, float(eval(args.factor)), args.updown)
