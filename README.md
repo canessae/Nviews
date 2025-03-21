@@ -8,8 +8,8 @@ source venv/bin/activate
 deactivate
 
 # Install
-source venv/bin/activate
-	python3 nviews.py -i img/000152.png -d depthmap/000152dp.png -nv 50		## -f 1/25 -ud 
+source venv/bin/activate \\
+	python3 nviews.py -i img/000152.png -d depthmap/000152dp.png -nv 50 
 deactivate
 
 # Output
