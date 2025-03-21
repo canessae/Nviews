@@ -1,15 +1,16 @@
 # Nviews
 A simple python tool to produce N views from single image and depth map
 
-# Usage
+# Install
 	python3 -m venv venv
 	source venv/bin/activate
 	pip install -r requirements.txt 
 	deactivate
 
-# Install
+# Usage 
+Example
 	source venv/bin/activate 
-	python3 nviews.py -i img/000152.png -d depthmap/000152dp.png -nv 50 
+	python3 nviews.py -i 000152.png -d 000152dp.png -nv 50 
 	deactivate
 
 # Output
